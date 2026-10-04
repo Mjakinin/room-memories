@@ -48,6 +48,7 @@ try {
     await page
       .getByRole("heading", { name: "Beispielwohnung", exact: true })
       .waitFor();
+    await page.locator(".scene-image img").evaluate((img) => img.decode());
     await page.screenshot({
       path: `.local/gallery-${mobile ? "mobile" : "desktop"}.png`,
       fullPage: true,

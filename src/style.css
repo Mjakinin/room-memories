@@ -687,7 +687,7 @@ h1 {
   }
   .sort-label select {
     font-size: 14px;
-    max-width: 111px;
+    max-width: none;
   }
   .scene-grid {
     gap: 20px;
