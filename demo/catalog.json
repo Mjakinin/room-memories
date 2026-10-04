@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "apartments": [
+    {
+      "id": "demo-apartment",
+      "title": "Beispielwohnung",
+      "description": "Eine frei lizenzierte Beispielszene zum Erkunden. Deine eigenen Räume folgen."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "demo-apartment",
+      "apartmentId": "demo-apartment",
+      "title": "Ein Blick in die Wohnung",
+      "description": "Eine frei lizenzierte Raumaufnahme zum Umschauen und Erkunden.",
+      "date": "",
+      "kind": "apartment",
+      "model": "apartment.sog",
+      "poster": "poster.png",
+      "settings": "settings.json",
+      "demo": true,
+      "attribution": {
+        "author": "Stephane Agullo",
+        "url": "https://sa3d.fr",
+        "license": "CC BY 4.0"
+      }
+    }
+  ]
+}
