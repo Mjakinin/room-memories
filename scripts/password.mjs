@@ -25,7 +25,7 @@ await fs.writeFile(
 );
 await fs.writeFile(
   path.join(local, "access.txt"),
-  `Room Memories\nWebsite: https://rooms.maxim.tk\nPasswort: ${password}\n\nPrivat aufbewahren; diese Datei wird nicht in Git gespeichert.\nNach einem Passwortwechsel npm run publish ausführen.\n`,
+  `Room Memories\nPasswort: ${password}\n\nPrivat aufbewahren; diese Datei wird nicht in Git gespeichert.\nNach einem Passwortwechsel npm run publish ausführen.\n`,
   { mode: 0o600 },
 );
 console.log(

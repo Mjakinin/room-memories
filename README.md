@@ -1,51 +1,53 @@
 # Room Memories
 
-Ein privates, begehbares Erinnerungsarchiv: Handyvideo → Kameraposen → Gaussian Splat → geschützte Webgalerie.
+A private archive of spaces you want to remember: phone video → camera poses → Gaussian splat → protected web gallery.
 
-[Private Website](https://rooms.maxim.tk) · [RTX-Einrichtung](docs/RTX.md) · [Backup & Restore](docs/BACKUP.md)
+[RTX setup](docs/RTX.md) · [Backup & restore](docs/BACKUP.md)
 
-[![Frei lizenzierte Beispielszene im Room-Memories-Viewer](demo/poster.png)](demo/demo.mp4)
+[![Licensed example scene in the Room Memories viewer](demo/poster.png)](demo/demo.mp4)
 
-[Demovideo ansehen](demo/demo.mp4) – Stephane Agullo, CC BY 4.0. Die Kamera bewegt sich durch die vorhandene Szene; es sind keine eigenen Trainingsmesswerte.
+[Watch the demo](demo/demo.mp4) — scene by Stephane Agullo, CC BY 4.0. The camera moves through an existing scene; this demonstrates the viewer rather than reconstruction performance.
 
-Dieses Projekt verbindet bestehende Computer-Vision-Technik mit einer eigenen Anwendung. Eigene Arbeit: Galerie, Hierarchie, Viewer-Integration, Zugangsschutz, Import, Verarbeitungsskripte, Veröffentlichung und überprüfbare Backups. Rekonstruktionsalgorithmen stammen aus **COLMAP**, **Nerfstudio/Splatfacto** und **gsplat**. Ein Fork ist für diese Integration nicht nötig.
+Room Memories combines existing computer vision tools with a custom application. The application provides the gallery, apartment/room hierarchy, viewer integration, authentication, import workflow, processing scripts, deployment and verified backups. Reconstruction uses **COLMAP**, **Nerfstudio/Splatfacto** and **gsplat**. No changes to their algorithms or source code are required.
 
-## Was schon funktioniert
+The deployed archive is private. This public repository contains the application and a licensed demo for review. The website interface is in German; project documentation is in English.
 
-- Wohnungen als Kategorien, darunter Zimmer oder eine zusammenhängende Wohnungsaufnahme.
-- Suche, Sortierung, Titel, Aufnahmedatum, Beschreibung, Vorschaubild und gespeicherte Startkamera.
-- SuperSplat-Viewer mit Maus/Touch, Zoom, Flugmodus, Vollbild und Rückkehr zur Startansicht. Modelldatei und Viewer-Code laden erst beim Öffnen.
-- Serverseitige Passwortprüfung; signierte 24-Stunden-Sitzung im HttpOnly-/Secure-/SameSite-Cookie.
-- Edge-Zugangsschutz für Galerie, Katalog, Vorschaubilder und Modelldateien – auch auf Netlify-Ursprungs- und Deploy-Adressen. Keine öffentlichen privaten Datei-URLs, kein Passwort im Browser-Code.
-- Lokaler Import gebündelter SOG- oder Gaussian-Splat-PLY-Dateien. PLY → SOG wird mit PlayCanvas Splat Transform auf der CPU konvertiert.
-- Befehle für Netlify-Veröffentlichung, unveränderliche Backup-Snapshots, SHA-256-Prüfung und Wiederherstellung.
+## Features
 
-Die mitgelieferte Beispielwohnung ist **SA3D_R&D_XP47 von Stephane Agullo, CC BY 4.0** ([Lizenz/Quelle](demo/ATTRIBUTION.md)). Sie dient der Viewer-Demo. Es wurde dafür kein eigenes Video rekonstruiert. Trainingsqualität und Verarbeitungszeiten werden erst nach dem ersten echten GPU-Durchlauf dokumentiert.
+- Apartments as categories, containing individual rooms or a continuous whole-apartment capture.
+- Search, sorting, titles, capture dates, descriptions, thumbnails and saved starting views.
+- SuperSplat viewer with mouse/touch navigation, zoom, fly mode, fullscreen and camera reset. Viewer code and model files load only when a scene is opened.
+- Server-side password verification and signed 24-hour sessions using HttpOnly, Secure and SameSite cookies.
+- Edge authentication for the gallery, catalog, thumbnails and model files, including direct Netlify origin and deploy URLs. Passwords are never embedded in browser code.
+- Local import of bundled SOG or Gaussian-splat PLY files. PlayCanvas Splat Transform converts PLY to SOG on the CPU.
+- Commands for Netlify deployment, versioned backup snapshots, SHA-256 verification and restoration.
 
-## Architektur
+The included example apartment is **SA3D_R&D_XP47 by Stephane Agullo, CC BY 4.0** ([attribution and source](demo/ATTRIBUTION.md)). It demonstrates the viewer and was not reconstructed from our own video. Training quality and processing times will be documented after the first real GPU run.
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    Phone[Handyvideo] --> Archive[Privates lokales Archiv]
-    Archive --> FFmpeg[FFmpeg: Videoframes]
-    FFmpeg --> COLMAP[COLMAP: Kameraposen]
+    Phone[Phone video] --> Archive[Private local archive]
+    Archive --> FFmpeg[FFmpeg: video frames]
+    FFmpeg --> COLMAP[COLMAP: camera poses]
     COLMAP --> Splatfacto[Nerfstudio / Splatfacto]
-    Splatfacto --> PLY[Vollständige Gaussian PLY]
-    PLY --> SOG[Splat Transform: SOG-Webfassung]
-    SOG --> Import[Import + Metadaten + Startkamera]
-    Import --> Deploy[Lokaler Build / Netlify CLI]
-    Deploy --> Gate[Edge-Zugangsschutz]
-    Login[Passwortprüfung / signiertes Cookie] --> Gate
-    Gate --> Gallery[Galerie + SuperSplat-Viewer]
-    Archive --> Disk[Externe Platte / geprüfte Snapshots]
+    Splatfacto --> PLY[Full Gaussian PLY]
+    PLY --> SOG[Splat Transform: web SOG]
+    SOG --> Import[Import + metadata + starting view]
+    Import --> Deploy[Local build / Netlify CLI]
+    Deploy --> Gate[Edge authentication]
+    Login[Password verification / signed cookie] --> Gate
+    Gate --> Gallery[Gallery + SuperSplat viewer]
+    Archive --> Disk[External drive / verified snapshots]
     Archive --> Crypt[rclone crypt / Google Drive]
 ```
 
-Das öffentliche Repository enthält Anwendungscode und die freigegebene Demo. Deine Videos, Räume, Trainingsdaten und Geheimnisse liegen außerhalb von Git. Ein Netlify-Build aus dem öffentlichen Repo kann deine privaten Räume nicht herstellen; veröffentlicht wird lokal aus deinem Archiv.
+Private videos, captures, training data and credentials stay outside Git. A Netlify build from this public repository cannot include private rooms; those are deployed locally from your archive.
 
-## Lokal ansehen
+## Run locally
 
-Voraussetzungen: Node.js **24**, npm, Python **3.10+**; RTX-Verarbeitung zusätzlich Docker/WSL2. Der Webviewer benötigt WebGL2, aber keine NVIDIA-GPU. Die Testausführung verwendet die eingebaute TypeScript-Unterstützung von Node 24.
+Requirements: Node.js **24**, npm and Python **3.10+**. RTX processing also requires Docker/WSL2. The web viewer requires WebGL2 but does not require an NVIDIA GPU. Tests use Node 24's built-in TypeScript support.
 
 ```bash
 git clone https://github.com/Mjakinin/room-memories.git
@@ -55,78 +57,78 @@ npm run build
 npm run dev
 ```
 
-`http://127.0.0.1:5173` ist eine **lokale Entwickleransicht ohne Auth-Middleware**. Sie bindet nur an den lokalen Computer. Nicht mit `--host 0.0.0.0` im Netzwerk freigeben. Zugangsschutz unter Netlify oder mit `netlify dev` testen. Für echtes Laptop-Training ist die optionale Brush-Erprobung getrennt vorgesehen.
+`http://127.0.0.1:5173` is a **local development preview without authentication middleware**. It binds to the local computer only; do not expose it to your network with `--host 0.0.0.0`. Test authentication on Netlify or with `netlify dev`. An optional Brush experiment for laptop training is planned separately.
 
-## Raum importieren
+## Import a room
 
-Zuerst [RTX-Pipeline](docs/RTX.md) ausführen. Danach ein Vorschaubild und die Startansicht vorbereiten, z.B. in einer lokalen SuperSplat-Instanz. Es handelt sich um Gaussian Splats, nicht um ein CAD-Modell mit wasserdichten Oberflächen oder einer automatisch verstandenen Raumsemantik.
+Run the [RTX pipeline](docs/RTX.md), then prepare a thumbnail and starting view, for example in a local SuperSplat instance. Captures are Gaussian splats, not watertight CAD models or automatically inferred room semantics.
 
 ```bash
-npm run rooms -- apartment --id berlin --title "Berlin · Wohnung" \
-  --description "Die Wohnung in Berlin."
+npm run rooms -- apartment --id berlin --title "Berlin apartment" \
+  --description "Our apartment in Berlin."
 
-npm run rooms -- import --id berlin-wohnzimmer --apartment berlin \
-  --title "Wohnzimmer" --date 2026-10-04 \
-  --description "Ein Abend im vertrauten Wohnzimmer." \
-  --model /pfad/splat.ply --poster /pfad/vorschau.jpg \
-  --settings /pfad/settings.json --video /pfad/wohnzimmer.mp4
+npm run rooms -- import --id berlin-living-room --apartment berlin \
+  --title "Living room" --date 2026-10-04 \
+  --description "An evening in the living room." \
+  --model /path/to/splat.ply --poster /path/to/thumbnail.jpg \
+  --settings /path/to/settings.json --video /path/to/living-room.mp4
 ```
 
-`--settings` und `--video` sind optional. Ohne Einstellungen startet eine Standardkamera; für eigene Szenen eine passende Startkamera verwenden. Der Import akzeptiert binäre Gaussian-Splat-PLY, keine gewöhnliche Punktwolke/Mesh-PLY. Nerfstudio-Exporte mit explizitem Z-up-Kommentar werden für die Webfassung ausgerichtet; die volle Originaldatei bleibt erhalten. SOG muss eine gebündelte `.sog`-Datei sein. Für eine ganze Wohnung zusätzlich `--kind apartment` setzen. Wiederholte IDs werden abgewiesen.
+`--settings` and `--video` are optional. Without settings, the viewer uses a default camera; choose a suitable starting view for your own scenes. Import accepts binary Gaussian-splat PLY, not ordinary point-cloud or mesh PLY. Nerfstudio exports with an explicit Z-up comment are aligned for the web copy while the complete original file is preserved. SOG must be a bundled `.sog` file. Use `--kind apartment` for a whole-apartment capture. Duplicate IDs are rejected.
 
-Startkamera nachträglich ändern:
+Update a starting view:
 
 ```bash
-npm run rooms -- view --id berlin-wohnzimmer --settings /pfad/settings.json
+npm run rooms -- view --id berlin-living-room --settings /path/to/settings.json
 npm run rooms -- list
 ```
 
-Standardarchiv: `private/archive/`. Für eine andere Platte immer denselben `ROOM_ARCHIVE`-Pfad bei Import, Build, Veröffentlichung und Backup setzen. Änderungen an Kategorien/Startansicht werden erst nach neuer Veröffentlichung online sichtbar.
+The default archive is `private/archive/`. To use another drive, set the same `ROOM_ARCHIVE` path for import, build, deployment and backup. Category and camera changes become available online after deployment.
 
-## Auf Netlify veröffentlichen
+## Deploy to Netlify
 
 ```bash
 npm install -g netlify-cli
 netlify login
-netlify link --id DEINE_SITE_ID
+netlify link --id YOUR_SITE_ID
 npm run password
 npm run publish
 ```
 
-Das generierte Passwort steht ausschließlich in `.local/access.txt`; `.env` enthält Hash und Sitzungsschlüssel. Beide sind von Git ausgeschlossen. `publish` baut die Website, importiert Geheimnisse für alle Deploy-Kontexte und lädt statische Dateien, Functions und Edge-Middleware gemeinsam hoch. Die CLI-Anmeldung bleibt in deinem Netlify-Konto. Passwortwechsel: `npm run password -- --rotate`, danach `npm run publish`. Damit werden alte Sitzungen ungültig. Nie `dist/` ohne Middleware bei einem anderen Hoster veröffentlichen.
+The generated password is stored only in `.local/access.txt`; `.env` contains its hash and the session secret. Both files are excluded from Git. `publish` builds the website, imports secrets for all deploy contexts and uploads static files, functions and edge middleware together. CLI authentication uses your Netlify account. To rotate credentials, run `npm run password -- --rotate`, then `npm run publish`; existing sessions become invalid. Never publish `dist/` on another host without the authentication middleware.
 
-Private SOGs liegen im geschützten Netlify-Deploy; der Originalarchivbestand bleibt auf deinen Datenträgern. Dateigrößen variieren mit Aufnahme, Punktzahl und Kompression. Es werden keine pauschalen Größen-/Qualitätsversprechen gemacht. Häufige große Downloads verbrauchen Netlify-Bandbreite, Snapshots verbrauchen Platten-/Drive-Speicher. Verwendet wird der vorhandene kostenlose Tarif, keine bezahlten Zusatzdienste oder Planwechsel.
+Private SOG files are included in the protected Netlify deploy; the original archive stays on your drives. File sizes depend on the capture, splat count and compression. Large downloads consume Netlify bandwidth, and snapshots consume disk and Drive storage. The project uses the existing free Netlify plan, with no paid services or plan changes.
 
-## Prüfen
+## Validation
 
 ```bash
 npm test
 npm run build
 npx playwright install chromium --only-shell
-# npm run dev in einem zweiten Terminal:
+# Start npm run dev in another terminal:
 node scripts/capture-demo.mjs
-# Nach Veröffentlichung; Zugang wird aus deiner lokalen Datei gelesen:
+# After deployment; credentials are read from your local file:
 node scripts/verify-deploy.mjs
 ```
 
-Tests decken Sitzungssignaturen/Expiry, Passwortprüfung, Login-Ursprung, private direkte Downloads, Kategorien und vollständige Backup-Wiederherstellung ab. Der Deployment-Test prüft echte HTTP-Antworten auf Netlify-Ursprungs- und Deploy-Adressen. Browserprüfungen verwenden eine frei lizenzierte Szene. Externe Backup-Platte, Google-OAuth und RTX-Training müssen auf deiner Hardware geprüft werden.
+Tests cover session signatures and expiry, password verification, login origin checks, protected direct downloads, categories and backup restoration. Deployment checks test real HTTP responses on Netlify origin and deploy URLs. Browser checks use the licensed demo scene. The external backup drive, Google OAuth and RTX training still need validation on the target hardware.
 
-## Nächster echter Durchlauf
+## First real capture
 
-1. RTX-Setup starten, Video aufnehmen und verarbeiten.
-2. PLY/SOG, Vorschau und Startansicht importieren; privat veröffentlichen.
-3. Externe Platte auswählen und Google Drive mit rclone crypt verbinden; Sicherung/Wiederherstellung durchführen.
-4. Dieselbe Aufnahme mit [LichtFeld Studio](https://github.com/MrNeRF/LichtFeld-Studio) vergleichen. Qualität, echte Dauer, Original-/Webgröße dokumentieren. Optional [Brush](https://github.com/ArthurBrussee/brush) auf dem Laptop testen.
+1. Run the RTX setup, record a video and process it.
+2. Import PLY/SOG, a thumbnail and camera settings; deploy privately.
+3. Choose an external drive and connect Google Drive using rclone crypt; test backup and restoration.
+4. Compare the same capture with [LichtFeld Studio](https://github.com/MrNeRF/LichtFeld-Studio). Document quality, actual processing time and original/web file sizes. Optionally test [Brush](https://github.com/ArthurBrussee/brush) on the laptop.
 
-## Verwendete Projekte
+## Projects used
 
-| Projekt | Rolle | Lizenz |
+| Project | Role | License |
 | --- | --- | --- |
-| [Nerfstudio](https://github.com/nerfstudio-project/nerfstudio) / [gsplat](https://github.com/nerfstudio-project/gsplat) | Splatfacto-Training und PLY-Export | Apache 2.0 |
-| [COLMAP](https://github.com/colmap/colmap) | Bildmerkmale und Kameraposen | BSD |
-| [FFmpeg](https://ffmpeg.org/) | Videoframes | LGPL/GPL je Build |
-| [SuperSplat Viewer](https://github.com/playcanvas/supersplat-viewer) / [PlayCanvas](https://github.com/playcanvas/engine) | Webdarstellung | MIT |
-| [Splat Transform](https://github.com/playcanvas/splat-transform) | PLY/SOG-Konvertierung | MIT |
-| [rclone](https://rclone.org/crypt/) | Verschlüsselte Drive-Sicherung | MIT |
+| [Nerfstudio](https://github.com/nerfstudio-project/nerfstudio) / [gsplat](https://github.com/nerfstudio-project/gsplat) | Splatfacto training and PLY export | Apache 2.0 |
+| [COLMAP](https://github.com/colmap/colmap) | Image features and camera poses | BSD |
+| [FFmpeg](https://ffmpeg.org/) | Video frame extraction | LGPL/GPL depending on build |
+| [SuperSplat Viewer](https://github.com/playcanvas/supersplat-viewer) / [PlayCanvas](https://github.com/playcanvas/engine) | Web rendering | MIT |
+| [Splat Transform](https://github.com/playcanvas/splat-transform) | PLY/SOG conversion | MIT |
+| [rclone](https://rclone.org/crypt/) | Encrypted Drive backups | MIT |
 
-Der Anwendungscode ist MIT-lizenziert; Beispielassets separat CC BY 4.0. Versionen der npm-Abhängigkeiten stehen im Lockfile. Der GPU-Setup hält den tatsächlich verwendeten Container-Digest fest.
+Application code is MIT-licensed; demo assets are separately licensed under CC BY 4.0. npm dependency versions are recorded in the lockfile. GPU setup records the exact container digest used.
